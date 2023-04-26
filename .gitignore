@@ -1,0 +1,8 @@
+.idea
+venv
+results.zip
+nohup.out
+.ipynb_checkpoints
+tmp.layout
+tmp_*.layout
+results
