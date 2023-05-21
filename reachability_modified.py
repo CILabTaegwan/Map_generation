@@ -196,6 +196,69 @@ def build_hamminglist_2(population):
         hamming_list.append(tmp_list2[max_index])
 
     return hamming_list
+def build_hamminglist_3(population):
+    a = list(range (len(population)))
+
+    array_size = (len(population), len(population))
+    value_array = np.zeros(array_size, dtype=int)
+
+    for i in combinations(a, 2):
+
+        value_array[i[0]][i[1]]=hamming_distance(population[i[0]],population[i[1]])
+    row_means = np.mean(value_array, axis=1)
+
+    # 열의 평균 계산
+    col_means = np.mean(value_array, axis=0)
+
+    # 행의 평균과 열의 평균의 합 계산
+    mean_value = row_means[:, np.newaxis] + col_means
+
+    mask = np.eye(len(population), dtype=bool)
+    mean_value[~mask] = 0
+    top_N = 50
+    idx = np.argpartition(mean_value, mean_value.size - top_N, axis=None)[-top_N:]
+    result = np.column_stack(np.unravel_index(idx, mean_value.shape))
+    test_map_idx = result[:, 1]
+
+    print(test_map_idx,"test_map_idx")
+    return value_array
+
+def build_hamming_list_4(population):
+    a = list(range(len(population)))
+    train_list = []
+    test_list = []
+
+    array_size = (len(population), len(population))
+    value_array = np.zeros(array_size, dtype=int)
+
+    for i in combinations(a, 2):
+        value_array[i[0]][i[1]] = hamming_distance(population[i[0]], population[i[1]])
+
+
+    # 행의 평균 계산
+    row_means = np.mean(value_array, axis=1)
+
+    # 열의 평균 계산
+    col_means = np.mean(value_array, axis=0)
+
+    # 행의 평균과 열의 평균의 합 계산
+    mean_value = row_means[:, np.newaxis] + col_means
+
+    mask = np.eye(len(population), dtype=bool)
+    mean_value[~mask] = 0
+    top_N = 50
+    idx = np.argpartition(mean_value, mean_value.size - top_N, axis=None)[-top_N:]
+    result = np.column_stack(np.unravel_index(idx, mean_value.shape))
+    test_map_idx = result[:,1]
+    for i in range(len(population)):
+        if i in test_map_idx:
+            test_list.append(population[i])
+        else:
+            train_list.append(population[i])
+
+    print(test_map_idx)
+# 여기서 seed 획득
+    return value_array, test_list, train_list
 def input_or_not(population, individual):
     satisfy = 1
     for i in range(len(population)):

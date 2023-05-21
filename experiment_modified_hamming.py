@@ -15,7 +15,8 @@ from utils.postprocessing import remove_unusable_parts
 import reachability_modified
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from itertools import combinations
+import statistics
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -32,9 +33,10 @@ class Workspace(object):
             if i in self.corners:
                 self.indices.remove(i)
         self.map_list = []
-        self.map_list_2=[]
+        self.map_list_test=[]
 
         self.hamming_list = []
+        self.hamming_list_test = []
 
         self.result_dir = './results/room{0}_seed{1}'.format(self.args.room_count,self.args.seed)
 
@@ -46,10 +48,16 @@ class Workspace(object):
         os.makedirs(os.path.join(self.result_dir, 'images'), exist_ok=True)
 
         os.makedirs(os.path.join(self.result_dir, 'layouts'), exist_ok=True)
+        os.makedirs(os.path.join(self.result_dir, 'test_images'), exist_ok=True)
+
+        os.makedirs(os.path.join(self.result_dir, 'test_layouts'), exist_ok=True)
+        os.makedirs(os.path.join(self.result_dir, 'test2_images'), exist_ok=True)
+
+        os.makedirs(os.path.join(self.result_dir, 'test2_layouts'), exist_ok=True)
 
 
 
-    def rand_position(self,num_items,layout):
+    def rand_position(self,num_items,layout,tmp_num):
         # random.choice 이후 sort list
 
         while True:
@@ -86,8 +94,12 @@ class Workspace(object):
             rooms = RoomFinder(new_layout).get_rooms()
             if len(rooms)!=1:
                 continue
-            if len(new_layout[new_layout==0])<13:
-                continue
+            if tmp_num==0:
+                if len(new_layout[new_layout == 0]) < 12:
+                    continue
+            else:
+                if len(new_layout[new_layout == 0]) < 15:
+                    continue
             return new_layout
     def run(self):
         tmp_index = 0
@@ -95,10 +107,8 @@ class Workspace(object):
             individual = np.zeros((5, 7), dtype=int)
             for i in [(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(0,6),(1,0),(1,6),(2,0),(2,6),(3,0),(3,6),(4,0),(4,1),(4,2),(4,3),(4,4),(4,5),(4,6)]:
                 individual[i[0]][i[1]] = 1
-            number = random.randint(6, 9)
-            new_individual = self.rand_position(number,individual)
-
-
+            number = random.randint(6, 8)
+            new_individual = self.rand_position(number,individual,1)
             if len(self.hamming_list) == 0:
                 self.hamming_list.append(new_individual)
                 tmp_index+=1
@@ -106,29 +116,61 @@ class Workspace(object):
                 if reachability_modified.input_or_not(self.hamming_list, new_individual)==1:
                     self.hamming_list.append(new_individual)
                     tmp_index += 1
-
         for j in range(len(self.hamming_list)-tmp_index,len(self.hamming_list)):
-
             hamming_map= self.hamming_list[j]
             hamming_map = player_position(hamming_map)
             if reachability_modified.get_solvability(hamming_map) == 1:
                 self.map_list.append(hamming_map)
                 print(len(self.map_list))
-            if len(self.map_list) == 3000:#361
+            if len(self.map_list) == 3050:#361
+                break
+    def run_testmap(self):
+        tmp_index = 0
+        for k in range(100):
+            individual = np.zeros((5, 7), dtype=int)
+            for i in [(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(0,6),(1,0),(1,6),(2,0),(2,6),(3,0),(3,6),(4,0),(4,1),(4,2),(4,3),(4,4),(4,5),(4,6)]:
+                individual[i[0]][i[1]] = 1
+            number = 5
+            new_individual = self.rand_position(number,individual,0)
+            if len(self.hamming_list_test) == 0:
+                self.hamming_list_test.append(new_individual)
+                tmp_index+=1
+            else:
+                if reachability_modified.input_or_not(self.hamming_list_test, new_individual)==1:
+                    self.hamming_list_test.append(new_individual)
+                    tmp_index += 1
+        for j in range(len(self.hamming_list_test)-tmp_index,len(self.hamming_list_test)):
+            hamming_map= self.hamming_list_test[j]
+            hamming_map = player_position(hamming_map)
+            if reachability_modified.get_solvability(hamming_map) == 1:
+                self.map_list_test.append(hamming_map)
+                print(len(self.map_list_test))
+            if len(self.map_list_test) == 50:#361
                 break
     def main(self):
-        while len(self.map_list)<3000:#361
+        while len(self.map_list)<3050:#361
             self.run()
 
-        for i in range(3000):#161
-            self.map_list_2.append(self.map_list[i])
-        new_hamming_array = reachability_modified.build_hamminglist_3(self.map_list_2)
+
+        while len(self.map_list_test)<50:
+            self.run_testmap()
+        train_hamming_array, test_list, train_list = reachability_modified.build_hamming_list_4(self.map_list)
+
+        appended_list = deepcopy(train_list)
+        for i in range(50):#161
+             appended_list.append(self.map_list_test[i])
+
+        new_hamming_array = reachability_modified.build_hamminglist_3(appended_list)
 
         current_path = os.getcwd()
-        np.save(current_path+'/x_save_modified',new_hamming_array)  # x_save.npy
+        np.save(self.result_dir+'/hamming_distance array',train_hamming_array)
+        np.save(self.result_dir+'/different rule array',new_hamming_array)# x_save.npy
         index_1 = 0
-        for i in range(len(self.map_list_2)):
-                tmp_map = self.map_list_2[i]
+        index_2= 3000
+        index_3= 3050
+
+        for i in range(len(train_list)):
+                tmp_map = train_list[i]
                 with open(os.path.join(self.result_dir, 'layouts', '{0}_processed.layout'.format(index_1)),
                           'w') as f:
                     layout = convert_to_layout(tmp_map.reshape(5, 7))
@@ -143,8 +185,39 @@ class Workspace(object):
                 cv2.imwrite(os.path.join(self.result_dir, 'images', '{0}_processed.jpg'.format(index_1)),
                             new_game_image)
                 index_1 += 1
+        for i in range(len(test_list)):
+                tmp_map = test_list[i]
+                with open(os.path.join(self.result_dir, 'test_layouts', '{0}_processed.layout'.format(index_2)),
+                          'w') as f:
+                    layout = convert_to_layout(tmp_map.reshape(5, 7))
+                    f.write(layout)
+                player1 = [(i, j) for i in range(5) for j in range(7) if tmp_map[i][j] == 7][0]
+                player2 = [(i, j) for i in range(5) for j in range(7) if tmp_map[i][j] == 8][0]
 
+                tmp_map[player1[0], player1[1]] = 0
+                tmp_map[player2[0], player2[1]] = 0
 
+                new_game_image = render_to_game(tmp_map.reshape(5, 7)) # render to game 확인
+                cv2.imwrite(os.path.join(self.result_dir, 'test_images', '{0}_processed.jpg'.format(index_2)),
+                            new_game_image)
+                index_2 += 1
+
+        for i in range(len(self.map_list_test)):
+                tmp_map = self.map_list_test[i]
+                with open(os.path.join(self.result_dir, 'test2_layouts', '{0}_processed.layout'.format(index_3)),
+                          'w') as f:
+                    layout = convert_to_layout(tmp_map.reshape(5, 7))
+                    f.write(layout)
+                player1 = [(i, j) for i in range(5) for j in range(7) if tmp_map[i][j] == 7][0]
+                player2 = [(i, j) for i in range(5) for j in range(7) if tmp_map[i][j] == 8][0]
+
+                tmp_map[player1[0], player1[1]] = 0
+                tmp_map[player2[0], player2[1]] = 0
+
+                new_game_image = render_to_game(tmp_map.reshape(5, 7)) # render to game 확인
+                cv2.imwrite(os.path.join(self.result_dir, 'test2_images', '{0}_processed.jpg'.format(index_3)),
+                            new_game_image)
+                index_3 += 1
 
 
 
@@ -157,15 +230,11 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, required=True, help='Seed of the experiment')
 
 
-    #args = parser.parse_args()
-    current_path = os.getcwd()
-    x_load = np.load(current_path + '/x_save_modified.npy')  # x_save.npy
+    args = parser.parse_args()
 
 
-    plt.pcolormesh(x_load, cmap='gray')
-    # 이미지 저장
     plt.savefig('image.png')
 
-    #workspace = Workspace(args)
+    workspace = Workspace(args)
 
-    #workspace.main()
+    workspace.main()
