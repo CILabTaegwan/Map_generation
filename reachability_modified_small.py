@@ -145,38 +145,14 @@ def hamming_distance (individual1,individual2):
                 distance_value+=1
 
     return distance_value
-def build_hamminglist(population):
-    a = list(range (len(population)))
-    b= [0 for i in range(len(population))]
 
-    tmp_list = []
-    for i in combinations(a, 2):
-        value=hamming_distance(population[i[0]],population[i[1]])
-
-        b[i[0]] += value
-        b[i[1]] += value
-
-    #sorted_b = sorted(b, reverse=True)
-
-    sorted_index =sorted(range(len(b)),reverse=True, key=lambda k: b[k])
-    '''
-    for i in range(len(a)):
-        for j in range(len(a)):
-            if sorted_b[i] == b[j]:
-                sorted_index.append(a[j])
-                break
-    '''
-
-    return sorted_index
 def build_hamminglist_3(population):
     a = list(range (len(population)))
-    tmp_list = []
-    #value_list = []
+
     array_size = (len(population), len(population))
     value_array = np.zeros(array_size, dtype=int)
 
     for i in combinations(a, 2):
-        tmp_list.append(i)
         value_array[i[0]][i[1]]=hamming_distance(population[i[0]],population[i[1]])
     row_means = np.mean(value_array, axis=1)
 
@@ -195,34 +171,6 @@ def build_hamminglist_3(population):
 
     print(test_map_idx, "test_map_idx")
     return value_array
-def build_hamminglist_2(population):
-    a = list(range (len(population)))
-    tmp_list = []
-    value_list = []
-    for i in combinations(a, 2):
-        tmp_list.append(i)
-        value=hamming_distance(population[i[0]],population[i[1]])
-        value_list.append(value)
-
-    sorted_index =sorted(range(len(value_list)),reverse=True, key=lambda k: value_list[k])
-
-    hamming_list = tmp_list[sorted_index[0]]
-    hamming_list = list(hamming_list)
-    while len(hamming_list)<10:
-        tmp_list2 = []
-        for i in range(100):
-            if i not in hamming_list:
-                tmp_list2.append(i)
-        new_list3 = [0 for i in range(len(tmp_list2))]
-        for j in hamming_list:
-            new_index = 0
-            for i in tmp_list2:
-                new_list3[new_index] +=hamming_distance(population[j],population[i])
-                new_index+=1
-        max_index = new_list3.index(max(new_list3))##인덱스 아님 i 수정 필오
-        hamming_list.append(tmp_list2[max_index])
-
-    return hamming_list
 def input_or_not(population, individual):
     satisfy = 1
     for i in range(len(population)):
@@ -242,7 +190,8 @@ def build_hamming_list_4(population):
     for i in combinations(a, 2):
         value_array[i[0]][i[1]] = hamming_distance(population[i[0]], population[i[1]])
 
-
+    transpose_array = value_array.transpose()
+    result_array = value_array+transpose_array
     # 행의 평균 계산
     row_means = np.mean(value_array, axis=1)
 
@@ -258,50 +207,31 @@ def build_hamming_list_4(population):
     idx = np.argpartition(mean_value, mean_value.size - top_N, axis=None)[-top_N:]
     result = np.column_stack(np.unravel_index(idx, mean_value.shape))
     test_map_idx = result[:,1]
+    #new_arr = np.zeros(([len(population)-top_N, len(population)-top_N]), dtype=float)
+    tmp_num=0
+
     for i in range(len(population)):
         if i in test_map_idx:
             test_list.append(population[i])
         else:
             train_list.append(population[i])
+            tmp_num_2=0
+            for j in range(len(population)):
+                if j in test_map_idx:
+                    pass
+                else:
+                    #new_arr[tmp_num][tmp_num_2]= result_array[i][j]
+                    tmp_num_2+=1
+            tmp_num+=1
+    # min_val = np.min(new_arr)
+    # max_val = np.max(new_arr)
+    # normalized_arr = (new_arr - min_val) / (max_val - min_val)
 
-    print(test_map_idx)
 # 여기서 seed 획득
-    return value_array, test_list, train_list
+    return 0, test_list,train_list
+    #return normalized_arr, test_list, train_list
 def main():
-    maze = [[0, 0, 0, 1, 1, 0, 0],
-            [0, 8, 0, 5, 0, 0, 0],
-            [0, 0, 0, 1, 0, 2, 3],
-            [3, 0, 0, 0, 1, 0, 0],
-            [0, 0, 1, 0, 0, 0, 0],
-            [8, 0, 0, 1, 0, 1, 0],
-            [4, 0, 4, 1, 2, 0, 7]]
-
-    maze1 = [[5, 0, 0, 1, 0, 0,8],
-            [0, 7, 0, 1, 0, 0, 0],
-            [0, 0, 0, 1, 0, 2, 3],
-            [2, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1, 0],
-            [0, 0, 0, 1, 0, 4, 0],
-            [4, 3, 1, 1, 2, 0, 0]]
-    maze2 =[[1, 1, 1, 1, 1, 1,1],
-            [1, 0, 1, 0, 0, 5, 1],
-            [1, 0, 0, 1, 0, 3, 1],
-            [1, 0, 0, 5, 0, 0, 1],
-            [1, 1, 1, 1, 1, 4, 1]]
-    maze =np.array(maze).reshape(7,7)
-    maze1 = np.array(maze1).reshape(7,7)
-    maze2 = np.array(maze2).reshape(7, 7)
-    new_list = []
-    new_list.append(maze)
-    new_list.append(maze1)
-    new_list.append(maze2)
-    build_hamminglist(new_list)
-    print(get_solvability(maze))
-    #solvability = get_solvability(maze1)
-    #print(input_or_not(new_list,maze2))
-
-    #y0이 y축, 1이 x축
-
+    pass
 
 
 

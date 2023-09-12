@@ -275,7 +275,10 @@ def visualize_room(layout, rooms):
 
     # cv2.imshow('Rooms', output)
 
-
+def tmp_render_to_game(file_name):
+    env = OverCookedEnv(scenario=file_name)
+    output = env.render()
+    return output
 
 def render_to_game(map_array):
 
@@ -296,6 +299,7 @@ def render_to_game(map_array):
     layout_str += '                ' + 'X' * map_array.shape[1]
 
     map_name = 'tmp_' + secrets.token_hex(nbytes=16)
+
     file_name = map_name + '.layout'
 
     with open(os.path.join('.', 'overcooked_ai_py', 'data', 'layouts', file_name), 'w+') as f:
