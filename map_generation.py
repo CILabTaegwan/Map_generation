@@ -108,7 +108,7 @@ class Workspace(object):
             if reachability_modified.get_solvability(hamming_map) == 1: #player 배치 이후 각 플레이어가 모든 interactive block에 도달할 수 있는지 판별
                 self.map_list.append(hamming_map)
                 print(len(self.map_list))
-            if len(self.map_list) == 150: # train layout 6000개 test layout 50개 완성까지 반복
+            if len(self.map_list) == 6050: # train layout 6000개 test layout 50개 완성까지 반복
                 break
 
     def modyfing(self):
@@ -134,7 +134,7 @@ class Workspace(object):
                     f.write(result)
                 f.close()
     def main(self):
-        while len(self.map_list)<150:
+        while len(self.map_list)<6050:
             self.run()
 
         # hamming distance metric, test layout, train layout
@@ -146,7 +146,7 @@ class Workspace(object):
         np.save(self.result_dir+'/hamming_distance array',train_hamming_array)
 
         index_1 = 0
-        index_2= 100
+        index_2= 6000
 
 
         for i in range(len(train_list)):
