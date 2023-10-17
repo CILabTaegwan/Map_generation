@@ -117,7 +117,7 @@ def find_four_direction(maze,start_p, end_p):
             break
     return reachability
 
-def get_solvability(indarray):
+def get_solvability(indarray): # 각 블록에 player (7,8블록)이 도달할 수 있는지 판별
 
     solvable = True
     player1 = [(i, j) for i in range(5) for j in range(7) if indarray[i][j] == 7][0]
@@ -125,7 +125,7 @@ def get_solvability(indarray):
 
 
     for k in range (2,6):
-        #tmp_len = math.ceil(2 - k / 5) # 2,2,2,1을 뽐기 위함
+
         block_position = [(i, j) for i in range(5) for j in range(7) if indarray[i][j] == k]
         for m in range(len(block_position)):
             reachablilty1 = find_four_direction(indarray, player1, block_position[m])
@@ -202,7 +202,7 @@ def build_hamming_list_4(population):
     result = np.column_stack(np.unravel_index(idx, mean_value.shape))
     test_map_idx = result[:,1]
 
-    #new_arr = np.zeros(([len(population)-top_N, len(population)-top_N]), dtype=float)
+    new_arr = np.zeros(([len(population)-top_N, len(population)-top_N]), dtype=float)
     tmp_num = 0
     for i in range(len(population)):
         if i in test_map_idx:
@@ -214,16 +214,17 @@ def build_hamming_list_4(population):
                 if j in test_map_idx:
                     pass
                 else:
-                    #new_arr[tmp_num][tmp_num_2]= result_array[i][j]
+                    new_arr[tmp_num][tmp_num_2]= result_array[i][j]
                     tmp_num_2+=1
             tmp_num+=1
-    # min_val = np.min(new_arr)
-    # max_val = np.max(new_arr)
-    # normalized_arr = (new_arr - min_val) / (max_val - min_val)
+    min_val = np.min(new_arr)
+    max_val = np.max(new_arr)
+    normalized_arr = (new_arr - min_val) / (max_val - min_val) #hamming distance array 정규화
 
-# 여기서 seed 획득
-    #return normalized_arr, test_list, train_list
-    return 0, test_list, train_list
+
+
+    return normalized_arr, test_list, train_list
+
 def input_or_not(population, individual):
     satisfy = 1
     for i in range(len(population)):
